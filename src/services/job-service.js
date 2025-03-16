@@ -1,53 +1,43 @@
 const API_URL = "https://api.example.com"
 
 export async function getJobs(filters = {}) {
-  const queryParams = new URLSearchParams()
+  const payload = {
+    sort_by: "created_at",
+    sort_order: "desc",
+    published_since: "2024-03-20T00:00:00.000Z",
+    size: 50,
+    from: 0,
+    q: filters.q || "Software Engineer",
+    title: filters.title || "Software Engineer",
+    website: "www.linkedin.com",
+    facets: ["country", "city"],
+  }
 
-  // Add filters to query params
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) {
-      queryParams.append(key, value)
-    }
+  const response = await fetch("https://api.apijobs.dev/v1/job/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": "4e4fce558288a8005970bb642a0569749178ce05c7f753f963411eddf47b4d81",
+    },
+    body: JSON.stringify(payload),
   })
 
-  // In a real app, you would use:
-  // const response = await fetch(`${API_URL}/jobs?${queryParams.toString()}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch jobs")
+  }
 
-  // For demo purposes, we'll return mock data
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-
-  return [
-    {
-      id: "1",
-      title: "Senior Frontend Developer",
-      company: "Google Inc.",
-      location: "New York, USA",
-      type: "Full-time",
-      salary: "$120,000 - $150,000",
-      postedDate: "2 weeks ago",
-      logo: "/placeholder.svg?height=64&width=64",
-    },
-    {
-      id: "2",
-      title: "UX Designer",
-      company: "Facebook",
-      location: "San Francisco, CA",
-      type: "Full-time",
-      salary: "$110,000 - $130,000",
-      postedDate: "3 days ago",
-      logo: "/placeholder.svg?height=64&width=64",
-    },
-    {
-      id: "3",
-      title: "Backend Developer",
-      company: "Amazon",
-      location: "Seattle, WA",
-      type: "Full-time",
-      salary: "$130,000 - $160,000",
-      postedDate: "1 week ago",
-      logo: "/placeholder.svg?height=64&width=64",
-    },
-  ]
+  const data = await response.json()
+console.log(data)
+  return data.hits.map((job) => ({
+    id: job.id,
+    title: job.title,
+    company: job.hiring_organization_name,
+    location: job.city,
+    type: "Full-time",
+    salary: "2000 - 3000",
+    postedDate: job.created_at,
+    logo: job.logo || "/placeholder.svg?height=64&width=64",
+  }))
 }
 
 export async function getJobById(id) {

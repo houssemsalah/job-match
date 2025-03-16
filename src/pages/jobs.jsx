@@ -1,14 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { Search, MapPin, Bookmark } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Checkbox } from "../components/ui/checkbox"
+import { getJobs } from "../services/job-service" // Import the getJobs function
 
 export default function JobsPage() {
   const [savedJobs, setSavedJobs] = useState([])
+  const [jobs, setJobs] = useState([]) // State to store jobs
+
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        const jobsData = await getJobs()
+        setJobs(jobsData)
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error)
+      }
+    }
+
+    fetchJobs()
+  }, [])
 
   const toggleSaveJob = (jobId) => {
     if (savedJobs.includes(jobId)) {
@@ -191,7 +206,7 @@ export default function JobsPage() {
           {/* Job Listings */}
           <div className="w-full lg:w-3/4">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">All Jobs (2310)</h2>
+              <h2 className="text-lg font-semibold">All Jobs ({jobs.length})</h2>
               <div className="flex items-center">
                 <span className="text-sm mr-2">Popular</span>
                 <button className="text-gray-500">
@@ -213,103 +228,47 @@ export default function JobsPage() {
             </div>
 
             <div className="space-y-6">
-              {/* Job Card 1 */}
-              <div className="bg-white rounded-lg border p-6 relative">
-                <button
-                  className={`absolute right-4 top-4 ${savedJobs.includes(1) ? "text-purple-700" : "text-gray-400 hover:text-purple-700"}`}
-                  onClick={() => toggleSaveJob(1)}
-                >
-                  <Bookmark className={`h-5 w-5 ${savedJobs.includes(1) ? "fill-current" : ""}`} />
-                </button>
-
-                <h3 className="text-lg font-semibold mb-1">Technical Support Specialist</h3>
-                <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2">
-                  PART-TIME
-                </div>
-                <p className="text-gray-600 text-sm mb-4">Salary: 20,000 INR - 25,000 INR</p>
-
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-white border">
-                    <img src="/placeholder.svg?height=32&width=32" alt="Google Inc." width={32} height={32} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Google Inc.</p>
-                    <p className="text-gray-500 text-xs">New Delhi, India</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 mb-4">
-                  <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200"></div>
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200"></div>
-                  </div>
-                  <span className="text-xs text-gray-500">10+ applicants</span>
-                </div>
-
-                <div className="flex gap-3">
-                  <Link
-                    to="/jobs/1"
-                    className="flex-1 text-center py-2 border border-gray-300 rounded text-sm font-medium hover:bg-gray-50"
+              {jobs.map((job) => (
+                <div key={job.id} className="bg-white rounded-lg border p-6 relative">
+                  <button
+                    className={`absolute right-4 top-4 ${savedJobs.includes(job.id) ? "text-purple-700" : "text-gray-400 hover:text-purple-700"}`}
+                    onClick={() => toggleSaveJob(job.id)}
                   >
-                    View details
-                  </Link>
-                  <Link
-                    to="/apply/1"
-                    className="flex-1 text-center py-2 bg-purple-700 text-white rounded text-sm font-medium hover:bg-purple-800"
-                  >
-                    Apply now
-                  </Link>
-                </div>
-              </div>
+                    <Bookmark className={`h-5 w-5 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
+                  </button>
 
-              {/* Job Card 2 */}
-              <div className="bg-white rounded-lg border p-6 relative">
-                <button
-                  className={`absolute right-4 top-4 ${savedJobs.includes(2) ? "text-purple-700" : "text-gray-400 hover:text-purple-700"}`}
-                  onClick={() => toggleSaveJob(2)}
-                >
-                  <Bookmark className={`h-5 w-5 ${savedJobs.includes(2) ? "fill-current" : ""}`} />
-                </button>
-
-                <h3 className="text-lg font-semibold mb-1">Senior UI/UX Designer</h3>
-                <div className="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2">
-                  FULL-TIME
-                </div>
-                <p className="text-gray-600 text-sm mb-4">Salary: $30,000 - $55,000</p>
-
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-white border">
-                    <img src="/placeholder.svg?height=32&width=32" alt="Apple" width={32} height={32} />
+                  <h3 className="text-lg font-semibold mb-1">{job.title}</h3>
+                  <div className={`bg-${job.type === "FULL-TIME" ? "purple" : "green"}-100 text-${job.type === "FULL-TIME" ? "purple" : "green"}-800 text-xs font-medium px-2 py-0.5 rounded inline-block mb-2`}>
+                    {job.type}
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">Apple</p>
-                    <p className="text-gray-500 text-xs">Boston, USA</p>
+                  <p className="text-gray-600 text-sm mb-4">Salary: {job.salary}</p>
+
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white border">
+                      <img src={job.logo} alt={job.company} width={32} height={32} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{job.company}</p>
+                      <p className="text-gray-500 text-xs">{job.location}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/jobs/${job.id}`}
+                      className="flex-1 text-center py-2 border border-gray-300 rounded text-sm font-medium hover:bg-gray-50"
+                    >
+                      View details
+                    </Link>
+                    <Link
+                      to={`/apply/${job.id}`}
+                      className="flex-1 text-center py-2 bg-purple-700 text-white rounded text-sm font-medium hover:bg-purple-800"
+                    >
+                      Apply now
+                    </Link>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-1 mb-4">
-                  <div className="flex -space-x-2">
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200"></div>
-                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200"></div>
-                  </div>
-                  <span className="text-xs text-gray-500">9+ applicants</span>
-                </div>
-
-                <div className="flex gap-3">
-                  <Link
-                    to="/jobs/2"
-                    className="flex-1 text-center py-2 border border-gray-300 rounded text-sm font-medium hover:bg-gray-50"
-                  >
-                    View details
-                  </Link>
-                  <Link
-                    to="/apply/2"
-                    className="flex-1 text-center py-2 bg-purple-700 text-white rounded text-sm font-medium hover:bg-purple-800"
-                  >
-                    Apply now
-                  </Link>
-                </div>
-              </div>
+              ))}
 
               {/* More Job Cards */}
               <div className="text-center mt-8">
@@ -324,4 +283,3 @@ export default function JobsPage() {
     </div>
   )
 }
-
